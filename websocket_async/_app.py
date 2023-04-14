@@ -470,5 +470,6 @@ class WebSocketApp:
 
             except Exception as e:
                 _logging.error("error from callback {}: {}".format(callback, e))
+                print(type(e), e, callback)
                 if self.on_error:
-                    self.on_error(self, e)
+                    await self.on_error(self, e)
