@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
 #
-"""
-
-"""
+import os
+import os.path
+import socket
+import websocket as ws
+import unittest
+from websocket._handshake import _create_sec_websocket_key, \
+    _validate as _validate_header
+from websocket._http import read_headers
+from websocket._utils import validate_utf8
+from base64 import decodebytes as base64decode
 
 """
 test_websocket.py
@@ -22,18 +29,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
-import os
-import os.path
-import socket
-import websocket as ws
-from websocket._handshake import _create_sec_websocket_key, \
-    _validate as _validate_header
-from websocket._http import read_headers
-from websocket._utils import validate_utf8
-from base64 import decodebytes as base64decode
-
-import unittest
 
 try:
     import ssl
@@ -437,7 +432,7 @@ class HandshakeTest(unittest.TestCase):
         self.assertRaises(ws._exceptions.WebSocketBadStatusException,
                           websock3.connect, "wss://api.bitfinex.com/ws/2", cookie="chocolate",
                           origin="testing_websockets.com",
-                          host="echo.websocket.org/websocket-client-test",
+                          host="echo.websocket.events/websocket-client-test",
                           subprotocols=["testproto"],
                           connection="Upgrade",
                           header={"CustomHeader1":"123",
