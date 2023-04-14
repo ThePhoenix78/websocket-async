@@ -121,6 +121,7 @@ async def connect(url, options, proxy, socket):
 
     addrinfo_list, need_tunnel, auth = _get_addrinfo_list(
         hostname, port, is_secure, proxy)
+
     if not addrinfo_list:
         raise WebSocketException(
             "Host not found.: " + hostname + ":" + str(port))

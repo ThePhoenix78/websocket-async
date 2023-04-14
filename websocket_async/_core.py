@@ -317,7 +317,7 @@ class WebSocket:
 
         return length
 
-    def send_binary(self, payload):
+    async def send_binary(self, payload):
         """
         Send a binary message (OPCODE_BINARY).
 
@@ -326,7 +326,7 @@ class WebSocket:
         payload: bytes
             payload of message to send.
         """
-        return self.send(payload, ABNF.OPCODE_BINARY)
+        return await self.send(payload, ABNF.OPCODE_BINARY)
 
     async def ping(self, payload=""):
         """
@@ -502,6 +502,7 @@ class WebSocket:
                         frame = await self.recv_frame()
                         if frame.opcode != ABNF.OPCODE_CLOSE:
                             continue
+
                         if isEnabledForError():
                             recv_status = struct.unpack("!H", frame.data[0:2])[0]
                             if recv_status >= 3000 and recv_status <= 4999:
@@ -511,6 +512,7 @@ class WebSocket:
                         break
                     except:
                         break
+                        
                 self.sock.settimeout(sock_timeout)
                 await self.sock.shutdown(socket.SHUT_RDWR)
             except:

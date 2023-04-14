@@ -172,6 +172,7 @@ async def send(sock, data):
             return sock.send(data)
         else:
             return await _send()
+            
     except socket.timeout as e:
         message = extract_err_message(e)
         print(type(e), e)
