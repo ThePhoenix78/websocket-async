@@ -431,7 +431,7 @@ class WebSocketApp:
 
                 dispatcher.read(self.sock.sock, read, check)
             except (WebSocketConnectionClosedException, ConnectionRefusedError, KeyboardInterrupt, SystemExit, Exception) as e:
-                handleDisconnect(e, reconnecting)
+                await handleDisconnect(e, reconnecting)
 
         async def read():
             if not self.keep_running:
@@ -441,7 +441,7 @@ class WebSocketApp:
                 op_code, frame = await self.sock.recv_data_frame(True)
             except (WebSocketConnectionClosedException, KeyboardInterrupt) as e:
                 if custom_dispatcher:
-                    return handleDisconnect(e)
+                    return await handleDisconnect(e)
                 else:
                     raise e
 
