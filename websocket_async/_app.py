@@ -51,7 +51,7 @@ class Dispatcher:
 
             r = sel.select(self.ping_timeout)
             if r:
-                if not read_callback():
+                if not await read_callback():
                     break
             check_callback()
             sel.close()
@@ -71,6 +71,7 @@ class SSLDispatcher:
             if r:
                 if not await read_callback():
                     break
+
             check_callback()
 
     def select(self):
@@ -235,13 +236,12 @@ class WebSocketApp:
         while not event.wait(interval):
             self.last_ping_tm = time.time()
             if self.sock:
-                await self.sock.ping(payload)
-                continue
                 try:
                     await self.sock.ping(payload)
                 except Exception as ex:
-                    raise ex
+                    print(type(ex), ex)
                     _logging.warning("send_ping routine terminated: {}".format(ex))
+                    raise ex
                     break
 
         self.stop_async(loop)
@@ -414,6 +414,7 @@ class WebSocketApp:
                     if (self.last_ping_tm and
                             has_timeout_expired and
                             (has_pong_not_arrived_after_last_ping or has_pong_arrived_too_late)):
+                        print("ping/pong timed out")
                         raise WebSocketTimeoutException("ping/pong timed out")
                 return True
 
@@ -434,6 +435,7 @@ class WebSocketApp:
     def create_dispatcher(self, ping_timeout, dispatcher=None):
         if dispatcher:  # If custom dispatcher is set, use WrappedDispatcher
             return WrappedDispatcher(self, ping_timeout, dispatcher)
+
 
         timeout = ping_timeout or 10
 

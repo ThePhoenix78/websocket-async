@@ -152,6 +152,7 @@ async def send(sock, data):
             pass
         except socket.error as exc:
             error_code = extract_error_code(exc)
+            print(type(exc), exc)
             if error_code is None:
                 raise
             if error_code != errno.EAGAIN or error_code != errno.EWOULDBLOCK:
@@ -173,9 +174,11 @@ async def send(sock, data):
             return await _send()
     except socket.timeout as e:
         message = extract_err_message(e)
+        print(type(e), e)
         raise WebSocketTimeoutException(message)
     except Exception as e:
         message = extract_err_message(e)
+        print(type(e), e)
         if isinstance(message, str) and "timed out" in message:
             raise WebSocketTimeoutException(message)
         else:
