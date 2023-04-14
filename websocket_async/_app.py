@@ -419,7 +419,6 @@ class WebSocketApp:
                 return True
 
             await dispatcher.read(self.sock.sock, read, check)
-            print("DONE")
             return False
 
         except (Exception, KeyboardInterrupt, SystemExit) as e:
