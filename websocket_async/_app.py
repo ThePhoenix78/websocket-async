@@ -286,7 +286,10 @@ class WebSocketApp:
                     _logging.debug("Sending ping")
                     await self.sock.ping(self.ping_payload)
                 except Exception as ex:
+                    print("Ping error", type(ex), ex)
                     _logging.debug("Failed to send ping: %s", ex)
+
+        self._stop_ping_thread()
 
     async def run_forever(self, sockopt=None, sslopt=None,
                     ping_interval=0, ping_timeout=None,
@@ -431,7 +434,7 @@ class WebSocketApp:
 
                 await dispatcher.read(self.sock.sock, read, check)
             except (WebSocketConnectionClosedException, ConnectionRefusedError, KeyboardInterrupt, SystemExit, Exception) as e:
-                print("PART1", type(e), e)
+                #print("PART1", type(e), e)
                 await handleDisconnect(e, reconnecting)
 
         async def read():
@@ -442,7 +445,7 @@ class WebSocketApp:
                 op_code, frame = await self.sock.recv_data_frame(True)
             except (WebSocketConnectionClosedException, KeyboardInterrupt) as e:
                 if custom_dispatcher:
-                    print("PART2", type(e), e)
+                    #print("PART2", type(e), e)
                     return await handleDisconnect(e)
                 else:
                     raise e
@@ -498,7 +501,7 @@ class WebSocketApp:
                     await dispatcher.reconnect(reconnect, setSock)
             else:
                 _logging.error("%s - goodbye" % e)
-                print("WEBSOCKET", type(e), e)
+                #print("WEBSOCKET", type(e), e)
                 await teardown()
 
         custom_dispatcher = bool(dispatcher)
@@ -542,12 +545,16 @@ class WebSocketApp:
             return [None, None]
 
     async def _callback(self, callback, *args):
-        if callback:
+        none = type(None)
+        if isinstance(callback, none):
+            return
+
+        if callback and callable(callback):
             try:
                 await callback(self, *args)
 
             except Exception as e:
                 _logging.error("error from callback {}: {}".format(callback, e))
-                print(type(e), e, callback)
+                #print(type(e), e, callback)
                 if self.on_error:
-                    await self.on_error(self, e)
+                    await self.on_error(self, [e, callback.__name__])
