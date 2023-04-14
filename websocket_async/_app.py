@@ -53,11 +53,11 @@ class DispatcherBase:
         time.sleep(seconds)
         callback()
 
-    def reconnect(self, seconds, reconnector):
+    async def reconnect(self, seconds, reconnector):
         try:
             _logging.info("reconnect() - retrying in %s seconds [%s frames in stack]" % (seconds, len(inspect.stack())))
             time.sleep(seconds)
-            reconnector(reconnecting=True)
+            await reconnector(reconnecting=True)
         except KeyboardInterrupt as e:
             _logging.info("User exited %s" % (e,))
 
@@ -120,11 +120,11 @@ class WrappedDispatcher:
         await self.dispatcher.read(sock, read_callback)
         self.ping_timeout and self.timeout(self.ping_timeout, check_callback)
 
-    def timeout(self, seconds, callback):
-        self.dispatcher.timeout(seconds, callback)
+    async def timeout(self, seconds, callback):
+        await self.dispatcher.timeout(seconds, callback)
 
-    def reconnect(self, seconds, reconnector):
-        self.timeout(seconds, reconnector)
+    async def reconnect(self, seconds, reconnector):
+        await self.timeout(seconds, reconnector)
 
 
 class WebSocketApp:
@@ -256,7 +256,7 @@ class WebSocketApp:
 
         self.ping_loop = asyncio.new_event_loop()
 
-        self.ping_thread = threading.Thread(target=loop.run_forever)
+        self.ping_thread = threading.Thread(target=self.ping_loop.run_forever)
         self.ping_thread.daemon = True
         self.ping_thread.start()
 
@@ -429,8 +429,9 @@ class WebSocketApp:
 
                 await self._callback(self.on_open)
 
-                dispatcher.read(self.sock.sock, read, check)
+                await dispatcher.read(self.sock.sock, read, check)
             except (WebSocketConnectionClosedException, ConnectionRefusedError, KeyboardInterrupt, SystemExit, Exception) as e:
+                print("PART1", type(e), e)
                 await handleDisconnect(e, reconnecting)
 
         async def read():
@@ -441,6 +442,7 @@ class WebSocketApp:
                 op_code, frame = await self.sock.recv_data_frame(True)
             except (WebSocketConnectionClosedException, KeyboardInterrupt) as e:
                 if custom_dispatcher:
+                    print("PART2", type(e), e)
                     return await handleDisconnect(e)
                 else:
                     raise e
@@ -493,19 +495,21 @@ class WebSocketApp:
                 _logging.info("%s - reconnect" % e)
                 if custom_dispatcher:
                     _logging.debug("Calling custom dispatcher reconnect [%s frames in stack]" % len(inspect.stack()))
-                    dispatcher.reconnect(reconnect, setSock)
+                    await dispatcher.reconnect(reconnect, setSock)
             else:
                 _logging.error("%s - goodbye" % e)
+                print("WEBSOCKET", type(e), e)
                 await teardown()
 
         custom_dispatcher = bool(dispatcher)
         dispatcher = self.create_dispatcher(ping_timeout, dispatcher, parse_url(self.url)[3])
 
         await setSock()
+
         if not custom_dispatcher and reconnect:
             while self.keep_running:
                 _logging.debug("Calling dispatcher reconnect [%s frames in stack]" % len(inspect.stack()))
-                dispatcher.reconnect(reconnect, setSock)
+                await dispatcher.reconnect(reconnect, setSock)
 
         return self.has_errored
 
@@ -544,5 +548,6 @@ class WebSocketApp:
 
             except Exception as e:
                 _logging.error("error from callback {}: {}".format(callback, e))
+                print(type(e), e, callback)
                 if self.on_error:
-                    self.on_error(self, e)
+                    await self.on_error(self, e)
