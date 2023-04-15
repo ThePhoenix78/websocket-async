@@ -497,7 +497,7 @@ class WebSocketApp:
                 await teardown()
                 # Propagate further
                 raise
-            if reconnect:
+            if reconnect or True:
                 _logging.info("%s - reconnect" % e)
                 if custom_dispatcher:
                     _logging.debug("Calling custom dispatcher reconnect [%s frames in stack]" % len(inspect.stack()))
